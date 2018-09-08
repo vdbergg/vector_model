@@ -8,3 +8,5 @@
 #endif //VECTOR_MODEL_VECTOR_MODEL_H
 
 int readIndexation();
+
+int runTermProcessing();

@@ -6,6 +6,7 @@
 #include <map>
 #include <string.h>
 #include <vector>
+#include <sstream>
 
 using namespace std;
 
@@ -43,20 +44,29 @@ int extractCollectionFromFiles() {
         vector<string> doc;
 
         if (readFile.is_open()) {
-            string word;
 
-            while (readFile >> word) {
-                if (!any_of(word.begin(), word.end(), ::isdigit)) {
-                    word = wordFormat(word);
-                    doc.push_back(word);
+            string line;
+            while (getline(readFile, line)) {
+                if (line == "") {
+                    collection.push_back(doc);
+                    doc.clear();
+                    continue;
+                };
+
+                string word;
+                istringstream tmp(line);
+
+                while (tmp >> word) {
+                    if (!any_of(word.begin(), word.end(), ::isdigit) && word.length() > 1) {
+                        word = wordFormat(word);
+                        doc.push_back(word);
+                    }
                 }
             }
 
-            collection.push_back(doc);
             readFile.close();
         } else return 1;
     }
-
     return 0;
 }
 
@@ -72,21 +82,24 @@ int writeFile () {
                 string documentId = to_string(it2->first);
                 string occurrences = to_string(it2->second);
 
-                occurrencesPerDocPrint += "(" + documentId + ", " + occurrences + "); ";
+//                occurrencesPerDocPrint += "(" + documentId + ", " + occurrences + "); ";
 
                 occurrencesPerDoc += occurrencesPerDoc.empty() ?
                                      documentId + "," + occurrences : ";" + documentId + "," + occurrences;
             }
-            cout<< it->first + " -> " + occurrencesPerDocPrint << endl;
+//            cout<< it->first + " -> " + occurrencesPerDocPrint << endl;
             write << it->first + ";" + occurrencesPerDoc + "\n";
         }
 
         write.close();
     }
+    write.open ("/home/berg/CLionProjects/RI/tp1/collection_size.txt");
+    if (write.is_open()) write << collection.size();
+
     return 0;
 }
 
-    int buildVocabulary() {
+int buildVocabulary() {
     for (unsigned i = 0; i < collection.size(); i++) {
         vector<string> doc = collection.at(i);
 
