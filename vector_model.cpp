@@ -136,7 +136,7 @@ int termProcessing(string query) {
 
     convertQueryToDoc(query);
 
-    cout << "Calculating partial similarity..." << endl;
+    cout << "Calculating partial similarities..." << endl;
 
     double accumulators[(int) COLLECTION_SIZE];
 

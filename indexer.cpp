@@ -24,7 +24,7 @@ vector<vector<string>> collection;
 map<string, map<int, int>> vocabulary;
 
 string wordFormat(string word) {
-    char chars[] = "\"()@#$%¨&*+=[]/|{}`};:><,.'";
+    char chars[] = "\"()@#$%¨&*+=[]/|{}`};:><?!,.'";
 
     transform(word.begin(), word.end(), word.begin(), ::tolower);
 
@@ -126,6 +126,54 @@ int buildVocabulary() {
         }
     }
     writeFile();
+}
+
+int readQuery() {
+    ifstream readFile;
+
+    readFile.open("/home/berg/Downloads/cfc/cfquery");
+
+    vector<map<string, map<int, int>>> queryList;
+
+    if (readFile.is_open()) {
+        string line;
+
+        while (getline(readFile, line)) {
+            if (line.find("QU") != string::npos) {
+                line.erase(0, 3); // Remove QU e espaço
+
+                string word;
+                istringstream tmp(line);
+
+                map<string, map<int, int>> queryPerString;
+
+                while (tmp >> word) {
+                    if (!any_of(word.begin(), word.end(), ::isdigit) && word.length() > 1) {
+                        word = wordFormat(word);
+                        bool termNotContained = vocabulary.find(word) == vocabulary.end();
+                        if (!termNotContained) {
+                            queryPerString[word] = vocabulary.at(word);
+                        }
+                    }
+                }
+                queryList.push_back(queryPerString);
+            }
+        }
+        readFile.close();
+
+        for (map<string, map<int, int>>::iterator it = queryList[0].begin(); it != queryList[0].end(); ++it) {
+            string occurrencesPerDoc, occurrencesPerDocPrint;
+
+            for (map<int, int>::iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2) {
+                string documentId = to_string(it2->first);
+                string occurrences = to_string(it2->second);
+
+                occurrencesPerDoc += occurrencesPerDoc.empty() ?
+                                     documentId + "," + occurrences : ";" + documentId + "," + occurrences;
+            }
+            cout<< it->first + " -> " + occurrencesPerDoc << endl;
+        }
+    } else return 1;
 }
 
 int index() {

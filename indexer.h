@@ -9,3 +9,4 @@
 
 
 int index();
+int readQuery();

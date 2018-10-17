@@ -5,10 +5,11 @@
 using namespace std;
 
 int main() {
-//    index();
-    readIndexation();
+    index();
+    readQuery();
+//    readIndexation();
 
-    runTermProcessing();
+//    runTermProcessing();
 
     return 0;
 }

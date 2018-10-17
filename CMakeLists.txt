@@ -3,4 +3,4 @@ project(vector_model)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(vector_model indexer.cpp vector_model.cpp main.cpp indexer.h vector_model.h)
+add_executable(vector_model indexer.cpp vector_model.cpp main.cpp indexer.h vector_model.h wand/Wand.cpp wand/MinHeap.cpp)
