@@ -10,13 +10,15 @@
 
 using namespace std;
 
+string PATH = "/home/vdberg/CLionProjects/vector_model/";
+
 vector<string> filesPath = {
-    "/home/berg/Downloads/cfc/cf74",
-    "/home/berg/Downloads/cfc/cf75",
-    "/home/berg/Downloads/cfc/cf76",
-    "/home/berg/Downloads/cfc/cf77",
-    "/home/berg/Downloads/cfc/cf78",
-    "/home/berg/Downloads/cfc/cf79"
+        PATH + "cfc/cf74",
+        PATH + "cfc/cf75",
+        PATH + "cfc/cf76",
+        PATH + "cfc/cf77",
+        PATH + "cfc/cf78",
+        PATH + "cfc/cf79"
 };
 
 vector<vector<string>> collection;
@@ -57,8 +59,8 @@ int extractCollectionFromFiles() {
                 istringstream tmp(line);
 
                 while (tmp >> word) {
-                    if (!any_of(word.begin(), word.end(), ::isdigit) && word.length() > 1) {
-                        word = wordFormat(word);
+                    word = wordFormat(word);
+                    if (!any_of(word.begin(), word.end(), ::isdigit) && word.length() > 2) {
                         doc.push_back(word);
                     }
                 }
@@ -72,7 +74,7 @@ int extractCollectionFromFiles() {
 
 int writeFile () {
     ofstream write;
-    write.open ("/home/berg/CLionProjects/RI/tp1/indexation.txt");
+    write.open (PATH + "indexer/indexation.txt");
 
     if (write.is_open()) {
         for (map<string, map<int, int>>::iterator it = vocabulary.begin(); it != vocabulary.end(); ++it) {
@@ -93,7 +95,7 @@ int writeFile () {
 
         write.close();
     }
-    write.open ("/home/berg/CLionProjects/RI/tp1/collection_size.txt");
+    write.open (PATH + "indexer/collection_size.txt");
     if (write.is_open()) write << collection.size();
 
     return 0;
@@ -131,7 +133,7 @@ int buildVocabulary() {
 int readQuery() {
     ifstream readFile;
 
-    readFile.open("/home/berg/Downloads/cfc/cfquery");
+    readFile.open(PATH + "/cfc/cfquery");
 
     vector<map<string, map<int, int>>> queryList;
 

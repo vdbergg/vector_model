@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6"/>
+	<Project>
+		<Option title="vector_model"/>
+		<Option makefile_is_custom="1"/>
+		<Option compiler="gcc"/>
+		<Option virtualFolders="CMake Files\;"/>
+		<Build>
+			<Target title="all">
+				<Option working_dir="/home/vdberg/CLionProjects/vector_model/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/home/vdberg/CLionProjects/vector_model/cmake-build-debug/Makefile&quot;  VERBOSE=1 all"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/home/vdberg/CLionProjects/vector_model/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/home/vdberg/CLionProjects/vector_model/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/home/vdberg/CLionProjects/vector_model/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="rebuild_cache">
+				<Option working_dir="/home/vdberg/CLionProjects/vector_model/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/home/vdberg/CLionProjects/vector_model/cmake-build-debug/Makefile&quot;  VERBOSE=1 rebuild_cache"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/home/vdberg/CLionProjects/vector_model/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/home/vdberg/CLionProjects/vector_model/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/home/vdberg/CLionProjects/vector_model/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="edit_cache">
+				<Option working_dir="/home/vdberg/CLionProjects/vector_model/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/home/vdberg/CLionProjects/vector_model/cmake-build-debug/Makefile&quot;  VERBOSE=1 edit_cache"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/home/vdberg/CLionProjects/vector_model/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/home/vdberg/CLionProjects/vector_model/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/home/vdberg/CLionProjects/vector_model/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="vector_model">
+				<Option output="/home/vdberg/CLionProjects/vector_model/cmake-build-debug/vector_model" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/vdberg/CLionProjects/vector_model/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/include/c++/5"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/5"/>
+					<Add directory="/usr/include/c++/5/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/5/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/5/include-fixed"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/home/vdberg/CLionProjects/vector_model/cmake-build-debug/Makefile&quot;  VERBOSE=1 vector_model"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/home/vdberg/CLionProjects/vector_model/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/home/vdberg/CLionProjects/vector_model/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/home/vdberg/CLionProjects/vector_model/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="vector_model/fast">
+				<Option output="/home/vdberg/CLionProjects/vector_model/cmake-build-debug/vector_model" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/vdberg/CLionProjects/vector_model/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/include/c++/5"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/5"/>
+					<Add directory="/usr/include/c++/5/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/5/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/5/include-fixed"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/home/vdberg/CLionProjects/vector_model/cmake-build-debug/Makefile&quot;  VERBOSE=1 vector_model/fast"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/home/vdberg/CLionProjects/vector_model/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/home/vdberg/CLionProjects/vector_model/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/home/vdberg/CLionProjects/vector_model/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+		</Build>
+		<Unit filename="/home/vdberg/CLionProjects/vector_model/indexer/indexer.cpp">
+			<Option target="vector_model"/>
+		</Unit>
+		<Unit filename="/home/vdberg/CLionProjects/vector_model/indexer/indexer.h">
+			<Option target="vector_model"/>
+		</Unit>
+		<Unit filename="/home/vdberg/CLionProjects/vector_model/main.cpp">
+			<Option target="vector_model"/>
+		</Unit>
+		<Unit filename="/home/vdberg/CLionProjects/vector_model/vector_model/vector_model.cpp">
+			<Option target="vector_model"/>
+		</Unit>
+		<Unit filename="/home/vdberg/CLionProjects/vector_model/vector_model/vector_model.h">
+			<Option target="vector_model"/>
+		</Unit>
+		<Unit filename="/home/vdberg/CLionProjects/vector_model/wand/MinHeap.cpp">
+			<Option target="vector_model"/>
+		</Unit>
+		<Unit filename="/home/vdberg/CLionProjects/vector_model/wand/Wand.cpp">
+			<Option target="vector_model"/>
+		</Unit>
+		<Unit filename="/home/vdberg/CLionProjects/vector_model/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\"/>
+		</Unit>
+	</Project>
+</CodeBlocks_project_file>

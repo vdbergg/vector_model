@@ -1,0 +1,30 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/vdberg/CLionProjects/vector_model/indexer/indexer.cpp
+algorithm
+-
+ctype.h
+-
+fstream
+-
+iostream
+-
+indexer.h
+/home/vdberg/CLionProjects/vector_model/indexer/indexer.h
+map
+-
+string.h
+-
+vector
+-
+sstream
+-
+
+/home/vdberg/CLionProjects/vector_model/indexer/indexer.h
+

@@ -1,12 +1,12 @@
 #include <iostream>
-#include "indexer.h"
-#include "vector_model.h"
+#include "indexer/indexer.h"
+#include "vector_model/vector_model.h"
 
 using namespace std;
 
 int main() {
     index();
-    readQuery();
+//    readQuery();
 //    readIndexation();
 
 //    runTermProcessing();
