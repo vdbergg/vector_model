@@ -4,6 +4,7 @@
 #include <iostream>
 #include "indexer.h"
 #include <map>
+#include <math.h>
 #include <string.h>
 #include <vector>
 #include <sstream>
@@ -72,35 +73,6 @@ int extractCollectionFromFiles() {
     return 0;
 }
 
-int writeFile () {
-    ofstream write;
-    write.open (PATH + "indexer/indexation.txt");
-
-    if (write.is_open()) {
-        for (map<string, map<int, int>>::iterator it = vocabulary.begin(); it != vocabulary.end(); ++it) {
-            string occurrencesPerDoc, occurrencesPerDocPrint;
-
-            for (map<int, int>::iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2) {
-                string documentId = to_string(it2->first);
-                string occurrences = to_string(it2->second);
-
-//                occurrencesPerDocPrint += "(" + documentId + ", " + occurrences + "); ";
-
-                occurrencesPerDoc += occurrencesPerDoc.empty() ?
-                                     documentId + "," + occurrences : ";" + documentId + "," + occurrences;
-            }
-//            cout<< it->first + " -> " + occurrencesPerDocPrint << endl;
-            write << it->first + ";" + occurrencesPerDoc + "\n";
-        }
-
-        write.close();
-    }
-    write.open (PATH + "indexer/collection_size.txt");
-    if (write.is_open()) write << collection.size();
-
-    return 0;
-}
-
 int buildVocabulary() {
     for (unsigned i = 0; i < collection.size(); i++) {
         vector<string> doc = collection.at(i);
@@ -127,7 +99,74 @@ int buildVocabulary() {
             vocabulary[term] = occurrencesPerDoc;
         }
     }
-    writeFile();
+}
+
+int writeIndexationFile() {
+    ofstream write;
+    write.open(PATH + "indexer/indexation.txt");
+
+    if (write.is_open()) {
+        string indexation;
+
+        for (map<string, map<int, int>>::iterator it = vocabulary.begin(); it != vocabulary.end(); ++it) {
+            string occurrencesPerDoc, occurrencesPerDocPrint;
+
+            map<int, int> docWithOccurrencesPerTerm = it->second;
+            double reason = (double) collection.size() / docWithOccurrencesPerTerm.size();
+            double idfPerTerm = log(reason);
+
+            double maxWeight = 0;
+
+            for (map<int, int>::iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2) {
+                string documentId = to_string(it2->first);
+                int occurrences = it2->second;
+                double weight = idfPerTerm * occurrences;
+
+                if (weight > maxWeight) maxWeight = weight;
+
+//                occurrencesPerDocPrint += "(" + documentId + ", " + occurrences + "," + to_string(weight) + "); ";
+
+                if (occurrencesPerDoc.empty()) {
+                    occurrencesPerDoc += documentId + "," + to_string(occurrences) + "," + to_string(weight);
+                } else {
+                    occurrencesPerDoc += ";" + documentId + "," + to_string(occurrences) + "," + to_string(weight);
+                }
+            }
+//            cout<< it->first + " | " + to_string(idfPerTerm) + " | " + to_string(maxWeight) + " -> " + occurrencesPerDocPrint << endl;
+            indexation += it->first + "|" + to_string(idfPerTerm) + "|" + to_string(maxWeight) + "|" + occurrencesPerDoc + "\n";
+        }
+        write << indexation;
+        write.close();
+    } else return 1;
+
+    write.open(PATH + "indexer/norms_per_doc.txt");
+    if (write.is_open()) {
+        string norms;
+
+        for (int j = 0; j < collection.size(); j++) {
+            double sumWeightSquared = 0;
+
+            for (map<string, map<int, int>>::iterator it = vocabulary.begin(); it != vocabulary.end(); ++it) {
+                map<int, int> docWithOccurrencesPerTerm = it->second;
+                double reason = (double) collection.size() / docWithOccurrencesPerTerm.size();
+                double idfPerTerm = log(reason);
+
+                bool docIdNotContained = docWithOccurrencesPerTerm.find(j) == docWithOccurrencesPerTerm.end();
+
+                if (!docIdNotContained) {
+                    sumWeightSquared += pow(idfPerTerm * docWithOccurrencesPerTerm[j], 2);
+                }
+            }
+
+            double norm = sqrt(sumWeightSquared);
+
+            norms += norms.empty() ? to_string(j) + "," + to_string(norm) : ";" + to_string(j) + "," + to_string(norm);
+        }
+        write << norms;
+        write.close();
+    } else return 1;
+
+    return 0;
 }
 
 int readQuery() {
@@ -182,5 +221,6 @@ int index() {
     cout << "Indexing..." <<endl;
     extractCollectionFromFiles();
     buildVocabulary();
+    writeIndexationFile();
     cout << "Indexed" <<endl;
 }
