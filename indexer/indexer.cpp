@@ -1,17 +1,28 @@
 #include <algorithm>
 #include <ctype.h>
 #include <fstream>
+#include <functional>
+#include <iomanip>
 #include <iostream>
 #include "indexer.h"
 #include <map>
 #include <math.h>
 #include <string.h>
 #include <vector>
+#include <set>
 #include <sstream>
+#include <stdlib.h>
 
 using namespace std;
 
-string PATH = "/home/vdberg/CLionProjects/vector_model/";
+string PATH = "/home/berg/CLionProjects/RI/vector_model/";
+
+string _to_string(double var) {
+    stringstream stream;
+    stream << fixed << setprecision(2) << var;
+    return stream.str();
+}
+
 
 vector<string> filesPath = {
         PATH + "cfc/cf74",
@@ -124,16 +135,16 @@ int writeIndexationFile() {
 
                 if (weight > maxWeight) maxWeight = weight;
 
-//                occurrencesPerDocPrint += "(" + documentId + ", " + occurrences + "," + to_string(weight) + "); ";
+//                occurrencesPerDocPrint += "(" + documentId + ", " + occurrences + "," + _to_string(weight) + "); ";
 
                 if (occurrencesPerDoc.empty()) {
-                    occurrencesPerDoc += documentId + "," + to_string(occurrences) + "," + to_string(weight);
+                    occurrencesPerDoc += documentId + "," + to_string(occurrences) + "," + _to_string(weight);
                 } else {
-                    occurrencesPerDoc += ";" + documentId + "," + to_string(occurrences) + "," + to_string(weight);
+                    occurrencesPerDoc += ";" + documentId + "," + to_string(occurrences) + "," + _to_string(weight);
                 }
             }
-//            cout<< it->first + " | " + to_string(idfPerTerm) + " | " + to_string(maxWeight) + " -> " + occurrencesPerDocPrint << endl;
-            indexation += it->first + "|" + to_string(idfPerTerm) + "|" + to_string(maxWeight) + "|" + occurrencesPerDoc + "\n";
+//            cout<< it->first + " | " + _to_string(idfPerTerm) + " | " + _to_string(maxWeight) + " -> " + occurrencesPerDocPrint << endl;
+            indexation += it->first + "|" + _to_string(idfPerTerm) + "|" + _to_string(maxWeight) + "|" + occurrencesPerDoc + "\n";
         }
         write << indexation;
         write.close();
@@ -144,7 +155,7 @@ int writeIndexationFile() {
         string norms;
 
         for (int j = 0; j < collection.size(); j++) {
-            double sumWeightSquared = 0;
+            float sumWeightSquared = 0;
 
             for (map<string, map<int, int>>::iterator it = vocabulary.begin(); it != vocabulary.end(); ++it) {
                 map<int, int> docWithOccurrencesPerTerm = it->second;
@@ -159,8 +170,7 @@ int writeIndexationFile() {
             }
 
             double norm = sqrt(sumWeightSquared);
-
-            norms += norms.empty() ? to_string(j) + "," + to_string(norm) : ";" + to_string(j) + "," + to_string(norm);
+            norms += norms.empty() ? to_string(j) + "," + _to_string(norm) : ";" + to_string(j) + "," + _to_string(norm);
         }
         write << norms;
         write.close();

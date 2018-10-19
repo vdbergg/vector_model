@@ -1,24 +1,50 @@
+#include <algorithm>
+#include <ctype.h>
 #include <fstream>
+#include <functional>
+#include <iomanip>
 #include <iostream>
 #include <map>
 #include <math.h>
 #include <vector>
 #include "vector_model.h"
-#include <sstream>
 #include <set>
-#include <algorithm>
-#include <functional>
+#include <string.h>
+#include <sstream>
+#include <stdlib.h>
 
 using namespace std;
 
-map<string, map<int, int>> invertedList;
-map<string, int> queryDoc;
-map<string, double> idfPerTerm;
-map<int, double> normsPerDoc;
+string PATH = "/home/berg/CLionProjects/RI/vector_model/";
 
-double COLLECTION_SIZE = 0;
+ofstream logDebug;
 
-map<int, double> similaritiesPerDoc;
+struct DocPayload {
+    double frequency;
+    double weight;
+    double norm;
+} mDocPayload;
+
+struct TermPayload {
+    double idf;
+    double maxWeight;
+    map<int, DocPayload> docsPerTerm;
+} mTermPayload;
+
+struct QueryPayload {
+    double norm;
+    map<string, double> queryWithWeight;
+} mQueryPayload;
+
+struct SimilarityPayload {
+    int docId;
+    string doc;
+    double similarity;
+};
+
+map<string, TermPayload> mInvertedList;
+vector<double> nNormsPerDoc;
+vector<double> mSimilaritiesPerDoc;
 
 vector<string> splitString(string text, char character) {
     stringstream test(text);
@@ -32,37 +58,55 @@ vector<string> splitString(string text, char character) {
 
 int readIndexation() {
     cout<< "Reading indexation..." << endl;
+    ifstream readFile;
 
-    ifstream readFile, fileCollectionSize;
-    readFile.open("/home/berg/CLionProjects/RI/tp1/indexation.txt");
-    fileCollectionSize.open("/home/berg/CLionProjects/RI/tp1/collection_size.txt");
+    readFile.open(PATH + "indexer/norms_per_doc.txt");
+    if (readFile.is_open()) {
+        string inputFile;
 
-    if (fileCollectionSize.is_open()) {
-        string word;
-        while (fileCollectionSize >> word) COLLECTION_SIZE = stoi(word);
-        fileCollectionSize.close();
-    }
+        while (readFile >> inputFile) {
+            vector<string> docsWithNorm = splitString(inputFile, ';');
 
+            for (int i = 0; i < docsWithNorm.size(); i++) {
+                vector<string> normPerDoc = splitString(docsWithNorm[i], ',');
+                int docId = stoi(normPerDoc[0]);
+                double norm = stod(normPerDoc[1]);
+                nNormsPerDoc.push_back(norm);
+            }
+        }
+        readFile.close();
+    } else return 1;
+
+    readFile.open(PATH + "indexer/indexation.txt");
     if (readFile.is_open()) {
         string word;
 
         while (readFile >> word) {
 
-            vector<string> termAndOccurrences = splitString(word, ';');
-            string term = termAndOccurrences[0];
+            vector<string> termAndPayload = splitString(word, '|');
+            string term = termAndPayload[0];
+            double idf = stod(termAndPayload[1]);
+            double maxWeight = stod(termAndPayload[2]);
 
-            map<int, int> docs;
-            for (int i = 1; i < termAndOccurrences.size(); i++) {
-                vector<string> docIdAndOccurrences = splitString(termAndOccurrences[i], ',');
-                int docId = stoi(docIdAndOccurrences[0]);
-                int occurrences = stoi(docIdAndOccurrences[1]);
+            map<int, DocPayload> docs;
+            vector<string> docIdAndPayload = splitString(termAndPayload[3], ';');
 
-                docs[docId] = occurrences;
+            for (int i = 0; i < docIdAndPayload.size(); i++) {
+                vector<string> payload = splitString(docIdAndPayload[i], ',');
+                int docId = stoi(payload[0]);
+                int frequency = stoi(payload[1]);
+                double weight = stod(payload[2]);
+
+                mDocPayload.frequency = frequency;
+                mDocPayload.weight = weight;
+                mDocPayload.norm = nNormsPerDoc.at(docId);
+                docs[docId] = mDocPayload;
             }
 
-            double reason = COLLECTION_SIZE / (termAndOccurrences.size() - 1);
-            idfPerTerm[term] = log(reason);
-            invertedList[term] = docs;
+            mTermPayload.idf = idf;
+            mTermPayload.maxWeight = maxWeight;
+            mTermPayload.docsPerTerm = docs;
+            mInvertedList[term] = mTermPayload;
         }
 
         readFile.close();
@@ -71,146 +115,157 @@ int readIndexation() {
     return 0;
 }
 
-int convertQueryToDoc(string query) {
-    istringstream tmp(query);
-    string word;
+int buildQueryPayload(string query) {
+    cout << "Converting query to payload..." << endl;
 
-    vector<string> words;
-    while(tmp >> word) words.push_back(word);
+    vector<string> words = splitString(query, ' ');
+
+    map<string, double> queryWithWeight;
+    double sumWeightSquared = 0;
 
     for (int i = 0; i < words.size(); i++) {
-        string term = words[i];
-        int occurrence = 0;
+        string word = words[i];
 
-        for (int j = 0; j < words.size(); j++) {
-            if (term == words[j]) occurrence++;
+        bool termNotIndexed = mInvertedList.find(word) == mInvertedList.end();
+        if (!termNotIndexed) {
+            int occurrence = 0;
+            for (int j = 0; j < words.size(); j++) {
+                if (word == words[j]) occurrence++;
+            }
+
+            double weight = mInvertedList[word].idf * occurrence;
+            sumWeightSquared += pow(weight, 2);
+            queryWithWeight[word] = weight;
         }
-        queryDoc[term] = occurrence;
     }
+    mQueryPayload.queryWithWeight = queryWithWeight;
+    mQueryPayload.norm = sqrt(sumWeightSquared);
 
     return 0;
-}
-
-double weight(int docId, string term) {
-    double idfTerm = idfPerTerm[term];
-    long tf = invertedList[term][docId];
-
-    return idfTerm * tf;
-}
-
-double weightQuery(string term) {
-    double idfTerm = idfPerTerm[term];
-    long tf = queryDoc[term];
-
-    return idfTerm * tf;
-}
-
-int calculateNorms() {
-    cout << "Calculating norm..." << endl;
-
-    for (int i = 0; i < COLLECTION_SIZE; i++) {
-        double norm = 0;
-
-        for (map<string, map<int, int>>::iterator it = invertedList.begin(); it != invertedList.end(); ++it) {
-            string term = it->first;
-            norm += pow(weight(i, term), 2);
-        }
-        normsPerDoc[i] = sqrt(norm);
-    }
-
-    return 0;
-}
-
-double calculateQueryNorm() {
-    double norm = 0;
-
-    for (map<string, int>::iterator it = queryDoc.begin(); it != queryDoc.end(); ++it) {
-        string term = it->first;
-        norm += pow(weightQuery(term), 2);
-    }
-    return sqrt(norm);
 }
 
 int termProcessing(string query) {
-    cout << "Converting query to doc..." << endl;
+    readIndexation();
 
-    convertQueryToDoc(query);
+    buildQueryPayload(query);
 
     cout << "Calculating partial similarities..." << endl;
 
-    double accumulators[(int) COLLECTION_SIZE];
+    long DOC_SIZE = nNormsPerDoc.size();
 
-    for (map<string, map<int, int>>::iterator it = invertedList.begin(); it != invertedList.end(); ++it) {
-        string term = it->first;
-        double weightQueryPerTerm = weightQuery(term);
+    double accumulators[DOC_SIZE];
 
-        for (map<int, int>::iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2) {
-            int docId = it2->first;
-            double partialSimilarity = weight(docId, term) * weightQueryPerTerm;
-            accumulators[docId] += partialSimilarity;
+    map<string, double> queryWithWeight = mQueryPayload.queryWithWeight;
+    for (map<string, double>::iterator it = queryWithWeight.begin(); it != queryWithWeight.end(); ++it) {
+        string word = it->first;
+
+        for (int j = 0; j < DOC_SIZE; j++) {
+            map<int, DocPayload> invertedListDocs = mInvertedList[word].docsPerTerm;
+
+            double partialSimilarity = invertedListDocs[j].weight * mQueryPayload.queryWithWeight[word];
+            accumulators[j] += partialSimilarity;
         }
     }
 
-    cout << "Calculating query norm..." << endl;
-
-    double queryNorm = calculateQueryNorm();
-
     cout << "Calculating full similarities..." << endl;
 
-    for (int i = 0; i < COLLECTION_SIZE; i++) {
-        double similarity = (accumulators[i] / normsPerDoc[i]) * queryNorm;
-        similaritiesPerDoc[i] = similarity;
+    for (int i = 0; i < DOC_SIZE; i++) {
+        double similarity = accumulators[i] / ((nNormsPerDoc[i]) * mQueryPayload.norm);
+        mSimilaritiesPerDoc.push_back(similarity);
     }
 
-    cout << "Sorting similarities..." << endl;
+    return 0;
+}
 
-    typedef function<bool(pair<int, double>, pair<int, double>)> Comparator;
-
-    Comparator compFunctor = [](pair<int, double> elem1, pair<int, double> elem2) {
-        return elem1.second < elem2.second;
+string findDocumentById(int docId) {
+    vector<string> filesPath = {
+            PATH + "cfc/cf74",
+            PATH + "cfc/cf75",
+            PATH + "cfc/cf76",
+            PATH + "cfc/cf77",
+            PATH + "cfc/cf78",
+            PATH + "cfc/cf79"
     };
 
-    set<pair<int, double>, Comparator> setOfWords(
-        similaritiesPerDoc.begin(), similaritiesPerDoc.end(), compFunctor
-    );
+    ifstream readFile;
 
-    cout << "Printing similarities..." << endl;
+    int documents = -1;
 
-    for (pair<int, double> element : setOfWords) {
-        cout << element.first << " -> " << element.second << endl;
+    for (unsigned i = 0; i < filesPath.size(); i++) {
+        readFile.open(filesPath.at(i));
+
+        if (readFile.is_open()) {
+            string line;
+            vector<string> linesDoc;
+
+            while (getline(readFile, line)) {
+                if (line == "") {
+                    linesDoc.clear();
+                    continue;
+                }
+                linesDoc.push_back(line);
+
+                documents += 1;
+                if (documents == docId) {
+                    string doc = "";
+
+                    for (int j = 0; j < linesDoc.size(); j++) {
+                        string word;
+                        istringstream tmp(linesDoc[j]);
+
+                        while (tmp >> word) doc += word + " ";
+                        doc += "\n";
+                    }
+                    return doc;
+                };
+            }
+            readFile.close();
+        };
     }
-
-    return 0;
+    return "";
 }
 
-string readInput() {
-    string str;
-    cout << "Enter query: ";
-    getline(cin, str);
-
-    return str;
+bool compareBySimilarity(const SimilarityPayload &a, const SimilarityPayload &b) {
+    return a.similarity < b.similarity;
 }
 
-int printSimilaritiesPerDoc() {
-    cout << "Printing similarities..." << endl;
+void printResults() {
+    logDebug.open(PATH + "log.txt");
 
-    for (map<int, double>::iterator it = similaritiesPerDoc.begin(); it != similaritiesPerDoc.end(); ++it) {
-        int docId = it->first;
-        double similarity = it->second;
-        cout << to_string(docId) + " -> " + to_string(similarity) << endl;
+    vector<SimilarityPayload> similarities;
+
+    for (int i = 0; i < mSimilaritiesPerDoc.size(); i++) {
+        if (mSimilaritiesPerDoc.at(i) > 0.000000) {
+            SimilarityPayload similarityPayload;
+            similarityPayload.docId = i;
+            similarityPayload.similarity = mSimilaritiesPerDoc.at(i);
+            similarities.push_back(similarityPayload);
+        }
+    }
+    cout << "Sorting full similarities..." << endl;
+
+    sort(similarities.begin(), similarities.end(), compareBySimilarity);
+
+    cout << "Printing full similarities..." << endl;
+
+    for (int i = 0; i < 21; i++) {
+        SimilarityPayload similarityPayload = similarities.at(i);
+        similarityPayload.doc = findDocumentById(similarityPayload.docId);
+
+        logDebug << to_string(similarityPayload.docId) + " -> " + to_string(similarityPayload.similarity) + "\n";
+        logDebug << similarityPayload.doc + "\n\n";
+
+        cout << to_string(similarityPayload.docId) + " -> " + to_string(similarityPayload.similarity) + "\n" << endl;
+        cout << similarityPayload.doc + "\n\n" << endl;
     }
 
-    return 0;
+    logDebug.close();
 }
 
 int runTermProcessing() {
-    calculateNorms();
-
-    while (true) {
-        string query = readInput();
-        termProcessing(query);
-//        printSimilaritiesPerDoc();
-    }
+    string query = "What are the effects of calcium on the physical properties of mucus from CF patients?"; //readInput();
+    termProcessing(query);
+    printResults();
 
     return 0;
 }

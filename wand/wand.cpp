@@ -15,3 +15,6 @@ void next(double threshold) {
 
 }
 
+void wand() {
+
+}
