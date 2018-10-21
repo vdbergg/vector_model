@@ -6,3 +6,7 @@
 #define VECTOR_MODEL_WAND_H
 
 #endif //VECTOR_MODEL_WAND_H
+
+void wand();
+
+MinHeap minHeap;

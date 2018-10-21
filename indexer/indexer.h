@@ -9,6 +9,4 @@
 
 
 int index();
-int readIndexation();
-int runTermProcessing();
 int readQuery();
