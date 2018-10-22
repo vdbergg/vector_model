@@ -17,7 +17,7 @@ using namespace std;
 
 string PATH = "/home/berg/CLionProjects/RI/vector_model/";
 
-ofstream logDebug;
+ofstream logDebug, writeFile;
 
 struct DocPayload {
     double frequency;
@@ -28,7 +28,7 @@ struct DocPayload {
 struct TermPayload {
     double idf;
     double maxWeight;
-    map<int, DocPayload> docsPerTerm;
+    map<int, DocPayload> docsWithWeight;
 } mTermPayload;
 
 struct QueryPayload {
@@ -44,7 +44,9 @@ struct SimilarityPayload {
 
 map<string, TermPayload> mInvertedList;
 vector<double> nNormsPerDoc;
-vector<double> mSimilaritiesPerDoc;
+vector<SimilarityPayload> mSimilarities;
+
+vector<string> mQueryList;
 
 vector<string> splitString(string text, char character) {
     stringstream test(text);
@@ -57,7 +59,6 @@ vector<string> splitString(string text, char character) {
 }
 
 int readIndexation() {
-    cout<< "Reading indexation..." << endl;
     ifstream readFile;
 
     readFile.open(PATH + "indexer/norms_per_doc.txt");
@@ -105,7 +106,7 @@ int readIndexation() {
 
             mTermPayload.idf = idf;
             mTermPayload.maxWeight = maxWeight;
-            mTermPayload.docsPerTerm = docs;
+            mTermPayload.docsWithWeight = docs;
             mInvertedList[term] = mTermPayload;
         }
 
@@ -116,8 +117,6 @@ int readIndexation() {
 }
 
 int buildQueryPayload(string query) {
-    cout << "Converting query to payload..." << endl;
-
     vector<string> words = splitString(query, ' ');
 
     map<string, double> queryWithWeight;
@@ -145,33 +144,36 @@ int buildQueryPayload(string query) {
 }
 
 int termProcessing(string query) {
-    readIndexation();
-
     buildQueryPayload(query);
 
-    cout << "Calculating partial similarities..." << endl;
-
     long DOC_SIZE = nNormsPerDoc.size();
-
-    double accumulators[DOC_SIZE];
-
+    double accumulators[DOC_SIZE] = { 0 };
     map<string, double> queryWithWeight = mQueryPayload.queryWithWeight;
+
     for (map<string, double>::iterator it = queryWithWeight.begin(); it != queryWithWeight.end(); ++it) {
         string word = it->first;
 
         for (int j = 0; j < DOC_SIZE; j++) {
-            map<int, DocPayload> invertedListDocs = mInvertedList[word].docsPerTerm;
+            map<int, DocPayload> invertedListDocs = mInvertedList[word].docsWithWeight;
 
             double partialSimilarity = invertedListDocs[j].weight * mQueryPayload.queryWithWeight[word];
             accumulators[j] += partialSimilarity;
         }
     }
 
-    cout << "Calculating full similarities..." << endl;
+    SimilarityPayload similarityPayload;
 
     for (int i = 0; i < DOC_SIZE; i++) {
-        double similarity = accumulators[i] / ((nNormsPerDoc[i]) * mQueryPayload.norm);
-        mSimilaritiesPerDoc.push_back(similarity);
+        double temp = nNormsPerDoc[i] * mQueryPayload.norm;
+
+        if (temp > 0.0 && nNormsPerDoc[i] > 0.0) {
+            double similarity = accumulators[i] / temp;
+
+            similarityPayload.docId = i;
+            similarityPayload.similarity = similarity;
+
+            mSimilarities.push_back(similarityPayload);
+        }
     }
 
     return 0;
@@ -189,7 +191,7 @@ string findDocumentById(int docId) {
 
     ifstream readFile;
 
-    int documents = -1;
+    bool docFounded = false;
 
     for (unsigned i = 0; i < filesPath.size(); i++) {
         readFile.open(filesPath.at(i));
@@ -197,75 +199,123 @@ string findDocumentById(int docId) {
         if (readFile.is_open()) {
             string line;
             vector<string> linesDoc;
+            int countLine = 1;
 
             while (getline(readFile, line)) {
                 if (line == "") {
-                    linesDoc.clear();
-                    continue;
-                }
-                linesDoc.push_back(line);
+                    if (docFounded) {
+                        string doc = "";
 
-                documents += 1;
-                if (documents == docId) {
-                    string doc = "";
+                        for (int j = 0; j < linesDoc.size(); j++) {
+                            string word;
+                            istringstream tmp(linesDoc[j]);
 
-                    for (int j = 0; j < linesDoc.size(); j++) {
-                        string word;
-                        istringstream tmp(linesDoc[j]);
+                            while (tmp >> word) doc += word + " ";
+                            doc += "\n";
+                        }
+                        readFile.close();
 
-                        while (tmp >> word) doc += word + " ";
-                        doc += "\n";
+                        return doc;
                     }
-                    return doc;
-                };
+
+                    linesDoc.clear();
+                    countLine = 1;
+                }
+
+                if (countLine == 1 && line.find("PN") != string::npos) {
+                    countLine++;
+                    linesDoc.push_back(line);
+                } else if (countLine == 2 && !docFounded && line.find("RN") != string::npos) {
+                    string temp = line;
+                    temp.erase(0, 3); // Remove RN e espaço
+                    int fileDocId = stoi(temp) - 1; // Trato os docId começando de 0 nas listas
+
+                    if (fileDocId == docId) docFounded = true;
+
+                    countLine++;
+                }
+
+                if (docFounded) linesDoc.push_back(line);
             }
-            readFile.close();
         };
+        readFile.close();
     }
     return "";
 }
 
 bool compareBySimilarity(const SimilarityPayload &a, const SimilarityPayload &b) {
-    return a.similarity < b.similarity;
+    return a.similarity > b.similarity;
 }
 
 void printResults() {
-    logDebug.open(PATH + "log.txt");
+    sort(mSimilarities.begin(), mSimilarities.end(), compareBySimilarity);
 
-    vector<SimilarityPayload> similarities;
-
-    for (int i = 0; i < mSimilaritiesPerDoc.size(); i++) {
-        if (mSimilaritiesPerDoc.at(i) > 0.000000) {
-            SimilarityPayload similarityPayload;
-            similarityPayload.docId = i;
-            similarityPayload.similarity = mSimilaritiesPerDoc.at(i);
-            similarities.push_back(similarityPayload);
-        }
-    }
-    cout << "Sorting full similarities..." << endl;
-
-    sort(similarities.begin(), similarities.end(), compareBySimilarity);
-
-    cout << "Printing full similarities..." << endl;
-
-    for (int i = 0; i < 21; i++) {
-        SimilarityPayload similarityPayload = similarities.at(i);
+    for (int i = 0; i < 20; i++) {
+        SimilarityPayload similarityPayload = mSimilarities.at(i);
         similarityPayload.doc = findDocumentById(similarityPayload.docId);
 
-        logDebug << to_string(similarityPayload.docId) + " -> " + to_string(similarityPayload.similarity) + "\n";
+        logDebug << "Similarity -> " + to_string(similarityPayload.similarity) + "\n";
+        writeFile << to_string(similarityPayload.docId + 1) + "|" + to_string(similarityPayload.similarity) + "\n";
         logDebug << similarityPayload.doc + "\n\n";
-
-        cout << to_string(similarityPayload.docId) + " -> " + to_string(similarityPayload.similarity) + "\n" << endl;
-        cout << similarityPayload.doc + "\n\n" << endl;
     }
+}
 
-    logDebug.close();
+int readQuery() {
+    ifstream readFile;
+
+    readFile.open(PATH + "/cfc/cfquery");
+
+    if (readFile.is_open()) {
+        string line;
+        string lines = "";
+
+        bool isQuery = false;
+
+        while (getline(readFile, line)) {
+            if (line.find("NR") != string::npos) {
+                isQuery = false;
+                mQueryList.push_back(lines);
+                lines = "";
+            }
+
+            if (isQuery) {
+                line.erase(0, 3); // 3 espaços
+                lines += " " + line;
+            } else if (line.find("QU") != string::npos) {
+                isQuery = true;
+                line.erase(0, 3); // Remove QU e espaço
+                lines += line;
+            }
+        }
+        readFile.close();
+    } else return 1;
 }
 
 int runTermProcessing() {
-    string query = "What are the effects of calcium on the physical properties of mucus from CF patients?"; //readInput();
-    termProcessing(query);
-    printResults();
+    logDebug.open(PATH + "log.txt");
+    writeFile.open(PATH + "result.txt");
+
+    readIndexation();
+    readQuery();
+
+    for (int i = 0; i < mQueryList.size(); i++) {
+        string query = mQueryList.at(i);
+        termProcessing(query);
+
+        logDebug << "Query: " + query + "\n\n";
+        writeFile << to_string(i + 1) + "|" + query + "\n";
+        cout << "Query " + to_string(i) + ": " + query + "\n";
+        printResults();
+    }
+
+    logDebug.close();
+    writeFile.close();
+
+    return 0;
+}
+
+int main() {
+    runTermProcessing();
 
     return 0;
 }
