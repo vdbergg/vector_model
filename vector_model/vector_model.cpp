@@ -97,6 +97,7 @@ int readIndexation() {
                 int docId = stoi(payload[0]);
                 int frequency = stoi(payload[1]);
                 double weight = stod(payload[2]);
+                // if (weight > 6 && term.length() > 6) weight *= 10 - Ajuste no modelo vetorial
 
                 mDocPayload.frequency = frequency;
                 mDocPayload.weight = weight;
@@ -303,7 +304,7 @@ int runTermProcessing() {
         termProcessing(query);
 
         logDebug << "Query: " + query + "\n\n";
-        writeFile << to_string(i + 1) + "|" + query + "\n";
+        writeFile << "QID|" + to_string(i + 1) + "|" + query + "\n";
         cout << "Query " + to_string(i) + ": " + query + "\n";
         printResults();
     }
